@@ -1,7 +1,6 @@
 #!/bin/bash
 
 repo=$( git rev-parse --show-toplevel )
-. ${repo}/util/scripts/colors.sh
 
 npm_clean () {
     local changed_path
@@ -28,15 +27,15 @@ npm_clean_install () {
 changed_packages=$( git diff-index HEAD@{1} --name-only -- "package.json" "**/package.json" )
 
 if ! git diff-index --quiet HEAD@{1} -- "package.json" "**/package.json"; then
-    printf "${COLOR_LIGHTPURPLE}The following node packages have changed since last npm install:"
+    printf "The following node packages have changed since last npm install:"
 
     for changed_package in $changed_packages; do
-        printf "\n${COLOR_RED} - ${repo}/${changed_package}${COLOR_NONE}";
+        printf "\n - ${repo}/${changed_package}";
     done
 
     echo ""
 
-    printf "${COLOR_LIGHTPURPLE}\nWould you like to clean and install the dependencies for these packages [y]:${COLOR_NONE} "
+    printf "\nWould you like to clean and install the dependencies for these packages [yn]: "
 
     read yn </dev/tty
 
