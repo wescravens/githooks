@@ -1,0 +1,53 @@
+#!/bin/bash
+
+repo=$( git rev-parse --show-toplevel )
+. ${repo}/util/scripts/colors.sh
+
+npm_clean () {
+    local changed_path
+    local package_dir
+    local package_node_modules
+
+    for changed_path in $changed_packages; do
+        package_dir=$( dirname ${repo}/${changed_path} )
+        package_node_modules=${package_dir}/node_modules
+        echo ""
+        printf "Removing ${package_node_modules}"
+        rm -rf $package_node_modules && \
+        printf " [done]"
+    done
+}
+
+npm_clean_install () {
+    npm_clean && \
+    echo ""
+    echo "Running npm install" && \
+    npm install
+}
+
+changed_packages=$( git diff-index HEAD@{1} --name-only -- "package.json" "**/package.json" )
+
+if ! git diff-index --quiet HEAD@{1} -- "package.json" "**/package.json"; then
+    printf "${COLOR_LIGHTPURPLE}The following node packages have changed since last npm install:"
+
+    for changed_package in $changed_packages; do
+        printf "\n${COLOR_RED} - ${repo}/${changed_package}${COLOR_NONE}";
+    done
+
+    echo ""
+
+    printf "${COLOR_LIGHTPURPLE}\nWould you like to clean and install the dependencies for these packages [y]:${COLOR_NONE} "
+
+    read yn </dev/tty
+
+    if [[ -z "$yn" ]]; then
+        yn="y"
+    fi
+
+    case $yn in
+        [Yy]* ) npm_clean_install && exit 0;;
+        * ) exit 0;;
+    esac
+else
+    exit 0
+fi
